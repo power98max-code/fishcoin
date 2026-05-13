@@ -442,11 +442,11 @@ const getTradeAmount = (stockName: string) => {
 
   return amount;
 };
-if (!isGameOpen) {
+const buyStock = (stock: Stock) => {
+  if (!isGameOpen) {
   alert("어인섬 Fish Coin 거래소는 5월 14일 오전 11시에 오픈합니다.");
   return;
 }
-const buyStock = (stock: Stock) => {
   if (!isGameOpen) return stock;
   if (!isMarketOpen) {
   alert("현재 장 마감 상태입니다.");
@@ -477,6 +477,10 @@ const buyStock = (stock: Stock) => {
 };
 
 const sellStock = (stock: Stock) => {
+  if (!isGameOpen) {
+  alert("어인섬 Fish Coin 거래소는 5월 14일 오전 11시에 오픈합니다.");
+  return;
+}
   if (!isMarketOpen) {
   alert("현재 장 마감 상태입니다.");
   return;

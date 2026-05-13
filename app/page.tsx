@@ -708,9 +708,19 @@ useEffect(() => {
               ×
             </button>
 
-            <h1 className="text-4xl font-black mb-2">
-              🐟 어인섬 Fish Coin 거래소
-            </h1>
+            
+              <div className="flex items-center gap-3 mb-2">
+  <img
+    src="/icon.png"
+    alt="로고"
+    className="w-10 h-10 rounded-full object-cover"
+  />
+
+  <h1 className="text-4xl font-black">
+    어인섬 Fish Coin 거래소
+  </h1>
+</div>
+          
 
             <p className="text-zinc-400 mb-6">
               로그인하면 FC와 보유 주식이 저장됩니다.

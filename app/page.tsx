@@ -1209,9 +1209,6 @@ useEffect(() => {
     관리자
   </button>
 )}
-<p className="text-xs text-zinc-500">
-  로그인 이메일: {user?.email}
-</p>
   <button
     onClick={logout}
     className="bg-zinc-800 hover:bg-zinc-700 px-4 py-2 rounded-xl text-sm font-bold"

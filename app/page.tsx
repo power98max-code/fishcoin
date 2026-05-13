@@ -53,6 +53,7 @@ type Stock = {
   price: number;
   suspendedUntil?: number;
   changeRate: number;
+   active?: boolean;
  history: {
   time: string;
   price: number;
@@ -78,6 +79,7 @@ const makeDefaultStocks = (): Stock[] =>
     image: member.image,
     price: START_PRICE,
     changeRate: 0,
+    active: true,
     history: [
   {
     time: "시작",
@@ -104,14 +106,21 @@ const blockedNicknames = [
 ];
 
 export default function Home() {
+  const [user, setUser] = useState<User | null>(null);
+  const [showAdmin, setShowAdmin] = useState(false);
+
   const currentHour = new Date().getHours();
 
 const isMarketOpen =
   currentHour >= 9 && currentHour < 21;
+  const GAME_OPEN_AT = new Date("2026-05-14T11:00:00+09:00").getTime();
+
+const isGameOpen = Date.now() >= GAME_OPEN_AT;
+const isAdmin =
+  user?.email === "power98max@fishcoin.local";
   const [activeTab, setActiveTab] = useState<Tab>("market");
   const [chartRange, setChartRange] = useState<ChartRange>("5m");
 
-  const [user, setUser] = useState<User | null>(null);
   const [nickname, setNickname] = useState("");
   const [isLoaded, setIsLoaded] = useState(false);
 
@@ -158,6 +167,7 @@ const seconds = String(countdown % 60).padStart(2, "0");
     (stock) => (holdings[stock.name] || 0) > 0
   );
   const visibleStocks = [...stocks]
+  .filter((stock) => stock.active !== false)
   .filter((stock) => stock.name.includes(searchText.trim()))
   .sort((a, b) => {
     if (sortType === "price") return b.price - a.price;
@@ -432,8 +442,12 @@ const getTradeAmount = (stockName: string) => {
 
   return amount;
 };
-
+if (!isGameOpen) {
+  alert("어인섬 Fish Coin 거래소는 5월 14일 오전 11시에 오픈합니다.");
+  return;
+}
 const buyStock = (stock: Stock) => {
+  if (!isGameOpen) return stock;
   if (!isMarketOpen) {
   alert("현재 장 마감 상태입니다.");
   return;
@@ -549,6 +563,42 @@ const recoverFromBankruptcy = () => {
 
   alert(
     "파산 신청이 완료되었습니다.\n100,000 FC로 다시 시작합니다."
+  );
+};
+const toggleStockActive = (stockName: string) => {
+  if (!isAdmin) return;
+
+  setStocks((prev) =>
+    prev.map((stock) =>
+      stock.name === stockName
+        ? { ...stock, active: stock.active === false ? true : false }
+        : stock
+    )
+  );
+};
+
+const resetStockPrice = (stockName: string) => {
+  if (!isAdmin) return;
+
+  setStocks((prev) =>
+    prev.map((stock) =>
+      stock.name === stockName
+        ? {
+            ...stock,
+            price: START_PRICE,
+            changeRate: 0,
+            suspendedUntil: undefined,
+            history: [
+              {
+                time: "관리자 초기화",
+                price: START_PRICE,
+                changeRate: 0,
+                timestamp: Date.now(),
+              },
+            ],
+          }
+        : stock
+    )
   );
 };
   useEffect(() => {
@@ -1146,7 +1196,18 @@ useEffect(() => {
   >
     {!!user && !canUseBankruptcy ? "파산 대기중" : "파산 신청"}
   </button>
-
+ 
+  {isAdmin && (
+  <button
+    onClick={() => setShowAdmin(true)}
+    className="bg-purple-500 hover:bg-purple-600 px-4 py-2 rounded-xl text-sm font-bold"
+  >
+    관리자
+  </button>
+)}
+<p className="text-xs text-zinc-500">
+  로그인 이메일: {user?.email}
+</p>
   <button
     onClick={logout}
     className="bg-zinc-800 hover:bg-zinc-700 px-4 py-2 rounded-xl text-sm font-bold"
@@ -1593,6 +1654,72 @@ const isDelisted = stock.price <= 500;
   </section>
 )}
       </div>
+      {showAdmin && isAdmin && (
+  <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-6 z-50">
+    <div className="w-full max-w-2xl bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
+      <div className="flex items-center justify-between mb-5">
+        <h2 className="text-2xl font-black">관리자 모드</h2>
+
+        <button
+          onClick={() => setShowAdmin(false)}
+          className="text-zinc-400 hover:text-white text-2xl"
+        >
+          ×
+        </button>
+      </div>
+
+      <div className="grid gap-3">
+        {stocks.map((stock) => (
+          <div
+            key={stock.name}
+            className="flex items-center justify-between bg-black/30 rounded-xl p-3"
+          >
+            <div className="flex items-center gap-3">
+              <img
+                src={stock.image}
+                alt={stock.name}
+                className="w-10 h-10 rounded-full object-cover"
+              />
+
+              <div>
+                <p className="font-black">
+                  {stock.name}
+                  {stock.active === false && (
+                    <span className="ml-2 text-xs text-red-400">숨김</span>
+                  )}
+                </p>
+
+                <p className="text-sm text-zinc-400">
+                  {stock.price.toLocaleString()} FC
+                </p>
+              </div>
+            </div>
+
+            <div className="flex gap-2">
+              <button
+                onClick={() => resetStockPrice(stock.name)}
+                className="bg-zinc-700 hover:bg-zinc-600 px-3 py-2 rounded-xl text-xs font-bold"
+              >
+                가격 초기화
+              </button>
+
+              <button
+                onClick={() => toggleStockActive(stock.name)}
+                className={`px-3 py-2 rounded-xl text-xs font-bold ${
+                  stock.active === false
+                    ? "bg-emerald-500 hover:bg-emerald-600 text-white"
+                    : "bg-red-500 hover:bg-red-600 text-white"
+                }`}
+              >
+                {stock.active === false ? "복구" : "숨김"}
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+)}
     </main>
   );
 }

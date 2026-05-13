@@ -1,0 +1,2 @@
+cd fan-stock-game
+npm run dev

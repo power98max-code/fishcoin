@@ -455,7 +455,6 @@ useEffect(() => {
         setStocks(
           data.stocks ?? makeDefaultStocks()
         );
-        setHiddenStockNames(data.hiddenStockNames ?? []);
       }
     }
   );

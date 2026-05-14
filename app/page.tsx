@@ -12,6 +12,7 @@ import {
   doc,
   getDoc,
   setDoc,
+  onSnapshot,
   collection,
   getDocs,
   query,
@@ -442,24 +443,26 @@ const getXAxisTicks = (stock: Stock) => {
   }
 };
  useEffect(() => {
-    loadMarketStocks();
-  }, []);
-  useEffect(() => {
-  if (stocks.length === 0) return;
+  const marketRef = doc(db, "market", "main");
 
-  const saveMarket = async () => {
-    await setDoc(
-      doc(db, "market", "main"),
-      {
-        stocks,
+  const unsubscribe = onSnapshot(marketRef, async (snapshot) => {
+    if (snapshot.exists()) {
+      const data = snapshot.data();
+      setStocks(data.stocks ?? makeDefaultStocks());
+    } else {
+      const defaultStocks = makeDefaultStocks();
+
+      await setDoc(marketRef, {
+        stocks: defaultStocks,
         updatedAt: Date.now(),
-      },
-      { merge: true }
-    );
-  };
+      });
 
-  saveMarket();
-}, [stocks]);
+      setStocks(defaultStocks);
+    }
+  });
+
+  return () => unsubscribe();
+}, []);
 
     const snap = await getDocs(q);
 
@@ -611,16 +614,31 @@ const recoverFromBankruptcy = () => {
     "파산 신청이 완료되었습니다.\n100,000 FC로 다시 시작합니다."
   );
 };
-const toggleStockActive = (stockName: string) => {
+const saveMarketStocks = async (nextStocks: Stock[]) => {
+  await setDoc(
+    doc(db, "market", "main"),
+    {
+      stocks: nextStocks,
+      updatedAt: Date.now(),
+    },
+    { merge: true }
+  );
+};
+const toggleStockActive = async (stockName: string) => {
   if (!isAdmin) return;
 
-  setStocks((prev) =>
-    prev.map((stock) =>
-      stock.name === stockName
-        ? { ...stock, active: stock.active === false ? true : false }
-        : stock
-    )
+  const nextStocks = stocks.map((stock) =>
+    stock.name === stockName
+      ? {
+          ...stock,
+          active: stock.active === false ? true : false,
+        }
+      : stock
   );
+
+  setStocks(nextStocks);
+
+  await saveMarketStocks(nextStocks);
 };
 
 const resetStockPrice = (stockName: string) => {

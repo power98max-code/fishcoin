@@ -19,7 +19,8 @@ import {
   limit,
   where,
 } from "firebase/firestore";
-import { auth, db } from "../lib/firebase";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { auth, db, storage } from "../lib/firebase";
 import {
   LineChart,
   Line,
@@ -162,7 +163,8 @@ const seconds = String(countdown % 60).padStart(2, "0");
 
   const topRise = [...stocks].sort((a, b) => b.changeRate - a.changeRate)[0];
   const topFall = [...stocks].sort((a, b) => a.changeRate - b.changeRate)[0];
-
+const [newStockName, setNewStockName] = useState("");
+const [newStockImageFile, setNewStockImageFile] = useState<File | null>(null);
   const portfolioStocks = stocks.filter(
     (stock) => (holdings[stock.name] || 0) > 0
   );
@@ -447,7 +449,6 @@ const buyStock = (stock: Stock) => {
   alert("어인섬 Fish Coin 거래소는 5월 14일 오전 11시에 오픈합니다.");
   return;
 }
-  if (!isGameOpen) return stock;
   if (!isMarketOpen) {
   alert("현재 장 마감 상태입니다.");
   return;
@@ -604,6 +605,80 @@ const resetStockPrice = (stockName: string) => {
         : stock
     )
   );
+};
+
+const uploadStockImage = async (file: File, stockName: string) => {
+  const imageRef = ref(
+    storage,
+    `streamers/${stockName}-${Date.now()}-${file.name}`
+  );
+
+  await uploadBytes(imageRef, file);
+
+  return await getDownloadURL(imageRef);
+};
+
+const addNewStock = async () => {
+  if (!isAdmin) return;
+
+  if (!newStockName.trim()) {
+    alert("종목명을 입력해주세요.");
+    return;
+  }
+
+  if (!newStockImageFile) {
+    alert("종목 이미지를 선택해주세요.");
+    return;
+  }
+
+  if (stocks.some((stock) => stock.name === newStockName.trim())) {
+    alert("이미 존재하는 종목입니다.");
+    return;
+  }
+
+  const imageUrl = await uploadStockImage(
+    newStockImageFile,
+    newStockName.trim()
+  );
+
+  const newStock: Stock = {
+    name: newStockName.trim(),
+    image: imageUrl,
+    price: START_PRICE,
+    changeRate: 0,
+    active: true,
+    history: [
+      {
+        time: "상장",
+        price: START_PRICE,
+        changeRate: 0,
+        timestamp: Date.now(),
+      },
+    ],
+  };
+
+  setStocks((prev) => [...prev, newStock]);
+  setNewStockName("");
+  setNewStockImageFile(null);
+
+  alert("새 종목이 추가되었습니다.");
+};
+
+const changeStockImage = async (stockName: string, file: File | null) => {
+  if (!isAdmin) return;
+  if (!file) return;
+
+  const imageUrl = await uploadStockImage(file, stockName);
+
+  setStocks((prev) =>
+    prev.map((stock) =>
+      stock.name === stockName
+        ? { ...stock, image: imageUrl }
+        : stock
+    )
+  );
+
+  alert("이미지가 변경되었습니다.");
 };
   useEffect(() => {
   const timer = setInterval(() => {
@@ -1697,6 +1772,20 @@ const isDelisted = stock.price <= 500;
             </div>
 
             <div className="flex gap-2">
+               <label className="bg-purple-500 hover:bg-purple-600 px-3 py-2 rounded-xl text-xs font-bold cursor-pointer">
+    이미지 변경
+    <input
+      type="file"
+      accept="image/*"
+      className="hidden"
+      onChange={(e) =>
+        changeStockImage(
+          stock.name,
+          e.target.files?.[0] ?? null
+        )
+      }
+    />
+  </label>
               <button
                 onClick={() => resetStockPrice(stock.name)}
                 className="bg-zinc-700 hover:bg-zinc-600 px-3 py-2 rounded-xl text-xs font-bold"

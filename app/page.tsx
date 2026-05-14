@@ -35,7 +35,7 @@ import {
 const START_COIN = 100000;
 const START_PRICE = 10000;
 const MARKET_INTERVAL = 5 * 60 * 1000;
-const GAME_OPEN_AT = new Date("2026-05-14T15:00:00+09:00").getTime();
+const GAME_OPEN_AT = new Date("2026-05-15T11:00:00+09:00").getTime();
 
 const crewMembers = [
   { name: "뿌꾸", image: "/streamers/뿌꾸.png" },
@@ -370,7 +370,7 @@ export default function Home() {
 
   const buyStock = (stock: Stock) => {
     if (!isGameOpen) {
-      alert("어인섬 Fish Coin 거래소는 5월 14일 오후 3시에 오픈합니다.");
+      alert("어인섬 Fish Coin 거래소는 5월 15 오전 11시에 오픈합니다.");
       return;
     }
     if (!isMarketOpen) {
@@ -405,7 +405,7 @@ export default function Home() {
 
   const sellStock = (stock: Stock) => {
     if (!isGameOpen) {
-      alert("어인섬 Fish Coin 거래소는 5월 14일 오후 3시에 오픈합니다.");
+      alert("어인섬 Fish Coin 거래소는 5월 15일 오전 11시에 오픈합니다.");
       return;
     }
     if (!isMarketOpen) {
@@ -683,7 +683,7 @@ export default function Home() {
         <div className="mb-6 bg-red-500/20 border border-red-500 text-red-200 rounded-2xl px-5 py-4 text-center font-bold">
           어인섬 Fish Coin 거래소는
           <br />
-          5월 14일 오후 3시에 오픈합니다.
+          5월 15일 오전 11시에 오픈합니다.
         </div>
       )}
 
@@ -869,7 +869,7 @@ export default function Home() {
 
         <div className="flex justify-end mb-4">
           <div className="bg-zinc-900 border border-zinc-800 rounded-2xl px-4 py-2 text-sm text-zinc-300">
-            {!isGameOpen ? "5월 14일 오후 3시 오픈 예정" : isMarketOpen ? (
+            {!isGameOpen ? "5월 15일 오전 11시 오픈 예정" : isMarketOpen ? (
               <>다음 변동까지 <span className="font-black text-white">{minutes}:{seconds}</span></>
             ) : "현재 장 마감"}
           </div>

@@ -139,6 +139,7 @@ const isAdmin =
   const [lastBankruptcyAt, setLastBankruptcyAt] = useState<number | null>(null);
   const [holdings, setHoldings] = useState<Record<string, number>>({});
   const [stocks, setStocks] = useState<Stock[]>(makeDefaultStocks());
+  const [hiddenStockNames, setHiddenStockNames] = useState<string[]>([]);
   const [rankings, setRankings] = useState<RankingUser[]>([]);
   const [selectedStock, setSelectedStock] = useState<Stock | null>(null);
   const [searchText, setSearchText] = useState("");
@@ -170,7 +171,7 @@ const [newStockImageFile, setNewStockImageFile] = useState<File | null>(null);
     (stock) => (holdings[stock.name] || 0) > 0
   );
  const visibleStocks = [...stocks]
-  .filter((stock) => stock.active !== false)
+  .filter((stock) => !hiddenStockNames.includes(stock.name))
   .filter((stock) => stock.name.includes(searchText.trim()))
   .sort((a, b) => {
     if (sortType === "price") return b.price - a.price;
@@ -454,6 +455,7 @@ useEffect(() => {
         setStocks(
           data.stocks ?? makeDefaultStocks()
         );
+        setHiddenStockNames(data.hiddenStockNames ?? []);
       }
     }
   );
@@ -628,35 +630,23 @@ const toggleStockActive = async (stockName: string) => {
   const marketRef = doc(db, "market", "main");
   const marketSnap = await getDoc(marketRef);
 
-  if (!marketSnap.exists()) {
-    alert("마켓 데이터가 없습니다.");
-    return;
-  }
+  const data = marketSnap.exists() ? marketSnap.data() : {};
+  const currentHidden: string[] = data.hiddenStockNames ?? [];
 
-  const data = marketSnap.data();
-  const currentStocks: Stock[] = data.stocks ?? [];
-
-  const nextStocks = currentStocks.map((stock) => {
-    if (stock.name !== stockName) return stock;
-
-    const isCurrentlyActive = stock.active !== false;
-
-    return {
-      ...stock,
-      active: !isCurrentlyActive,
-    };
-  });
+  const nextHidden = currentHidden.includes(stockName)
+    ? currentHidden.filter((name) => name !== stockName)
+    : [...currentHidden, stockName];
 
   await setDoc(
     marketRef,
     {
-      stocks: nextStocks,
+      hiddenStockNames: nextHidden,
       updatedAt: Date.now(),
     },
     { merge: true }
   );
 
-  setStocks(nextStocks);
+  setHiddenStockNames(nextHidden);
 
   alert("숨김 상태가 저장되었습니다.");
 };
@@ -1882,9 +1872,9 @@ const isDelisted = stock.price <= 500;
               <div>
                 <p className="font-black">
                   {stock.name}
-                  {stock.active === false && (
-                    <span className="ml-2 text-xs text-red-400">숨김</span>
-                  )}
+                  {hiddenStockNames.includes(stock.name) && (
+  <span className="ml-2 text-xs text-red-400">숨김</span>
+)}
                 </p>
 
                 <p className="text-sm text-zinc-400">
@@ -1918,12 +1908,12 @@ const isDelisted = stock.price <= 500;
               <button
                 onClick={() => toggleStockActive(stock.name)}
                 className={`px-3 py-2 rounded-xl text-xs font-bold ${
-                  stock.active === false
+                  hiddenStockNames.includes(stock.name)
                     ? "bg-emerald-500 hover:bg-emerald-600 text-white"
                     : "bg-red-500 hover:bg-red-600 text-white"
                 }`}
               >
-                {stock.active === false ? "복구" : "숨김"}
+                {hiddenStockNames.includes(stock.name) ? "복구" : "숨김"}
               </button>
             </div>
           </div>

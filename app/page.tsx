@@ -428,7 +428,7 @@ const getXAxisTicks = (stock: Stock) => {
   if (marketSnap.exists()) {
     const data = marketSnap.data();
 
-    setStocks(data.stocks ?? makeDefaultStocks());
+    
 
   } else {
 
@@ -448,7 +448,6 @@ const getXAxisTicks = (stock: Stock) => {
   const unsubscribe = onSnapshot(marketRef, async (snapshot) => {
     if (snapshot.exists()) {
       const data = snapshot.data();
-      setStocks(data.stocks ?? makeDefaultStocks());
     } else {
       const defaultStocks = makeDefaultStocks();
 
@@ -638,7 +637,16 @@ const toggleStockActive = async (stockName: string) => {
 
   setStocks(nextStocks);
 
-  await saveMarketStocks(nextStocks);
+  await setDoc(
+    doc(db, "market", "main"),
+    {
+      stocks: nextStocks,
+      updatedAt: Date.now(),
+    },
+    { merge: true }
+  );
+
+  alert("시장 상태가 저장되었습니다.");
 };
 
 const resetStockPrice = (stockName: string) => {

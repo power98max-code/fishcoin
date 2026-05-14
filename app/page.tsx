@@ -453,19 +453,14 @@ const getXAxisTicks = (stock: Stock) => {
 useEffect(() => {
   const marketRef = doc(db, "market", "main");
 
-  const unsubscribe = onSnapshot(
-    marketRef,
-    async (snapshot) => {
-      if (snapshot.exists()) {
-        const data = snapshot.data();
+  const unsubscribe = onSnapshot(marketRef, (snapshot) => {
+    if (!snapshot.exists()) return;
 
-        setStocks(
-          data.stocks ?? makeDefaultStocks()
-        );
-        setLastMarketUpdateAt(data.updatedAt ?? Date.now());
-      }
-    }
-  );
+    const data = snapshot.data();
+
+    setStocks(data.stocks ?? []);
+    setLastMarketUpdateAt(data.updatedAt ?? Date.now());
+  });
 
   return () => unsubscribe();
 }, []);

@@ -949,7 +949,11 @@ export default function Home() {
               <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-10 text-center"><p className="text-2xl font-black mb-2">보유 종목이 없습니다</p><p className="text-zinc-400">시장 탭에서 원하는 종목을 매수해보세요.</p></div>
             ) : (
               portfolioStocks.map((stock) => (
-                <div key={stock.name} className="bg-zinc-900 border border-zinc-800 rounded-3xl p-6">
+                <div
+  key={stock.name}
+  onClick={() => setSelectedStock(stock)}
+  className="bg-zinc-900 border border-zinc-800 rounded-3xl p-6 cursor-pointer hover:scale-[1.01] transition"
+>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4"><img src={stock.image} alt={stock.name} className="w-16 h-16 rounded-full object-cover" /><div><h2 className="text-2xl font-black">{stock.name}</h2><p className="text-zinc-400">{holdings[stock.name]}주 보유중</p></div></div>
                     <div className="text-right"><p className="text-2xl font-black">{(holdings[stock.name] * stock.price).toLocaleString()} FC</p></div>

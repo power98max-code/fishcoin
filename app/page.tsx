@@ -1466,14 +1466,20 @@ useEffect(() => {
           </div>
         </section>
 <div className="flex justify-end mb-4">
-  {isMarketOpen && (
   <div className="bg-zinc-900 border border-zinc-800 rounded-2xl px-4 py-2 text-sm text-zinc-300">
-    다음 변동까지{" "}
-    <span className="font-black text-white">
-      {minutes}:{seconds}
-    </span>
+    {!isGameOpen ? (
+      "5월 14일 오후 12시 오픈 예정"
+    ) : isMarketOpen ? (
+      <>
+        다음 변동까지{" "}
+        <span className="font-black text-white">
+          {minutes}:{seconds}
+        </span>
+      </>
+    ) : (
+      "현재 장 마감"
+    )}
   </div>
-)}
 </div>
         <nav className="grid grid-cols-3 gap-3 bg-zinc-900 border border-zinc-800 rounded-3xl p-2 mb-8">
           {[

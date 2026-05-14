@@ -640,29 +640,30 @@ const saveMarketStocks = async (nextStocks: Stock[]) => {
 const toggleStockActive = async (stockName: string) => {
   if (!isAdmin) return;
 
-  const hiddenRef = doc(db, "market", "hidden");
-  const hiddenSnap = await getDoc(hiddenRef);
+  const ok = confirm(
+    `${stockName} 종목을 시장에서 제거할까요?\n다시 추가하려면 종목 추가로 재상장해야 합니다.`
+  );
 
-  const currentNames: string[] = hiddenSnap.exists()
-    ? hiddenSnap.data().names ?? []
-    : [];
+  if (!ok) return;
 
-  const nextNames = currentNames.includes(stockName)
-    ? currentNames.filter((name) => name !== stockName)
-    : [...currentNames, stockName];
+  const marketRef = doc(db, "market", "main");
+
+  const nextStocks = stocks.filter(
+    (stock) => stock.name !== stockName
+  );
+
+  setStocks(nextStocks);
 
   await setDoc(
-    hiddenRef,
+    marketRef,
     {
-      names: nextNames,
+      stocks: nextStocks,
       updatedAt: Date.now(),
     },
     { merge: true }
   );
 
-  setHiddenStockNames(nextNames);
-
-  alert("숨김 상태가 저장되었습니다.");
+  alert("종목이 시장에서 제거되었습니다.");
 };
 
 const resetStockPrice = async (stockName: string) => {

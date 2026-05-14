@@ -494,7 +494,7 @@ export default function Home() {
         await setDoc(marketRef, {
           stocks: defaultStocks,
           lastUpdatedAt: GAME_OPEN_AT,
-          nextUpdateAt: GAME_OPEN_AT,
+          nextUpdateAt: GAME_OPEN_AT + MARKET_INTERVAL,
         });
         return;
       }
@@ -595,7 +595,7 @@ export default function Home() {
   {
     stocks: nextStocks,
     lastUpdatedAt: now,
-    nextUpdateAt: GAME_OPEN_AT + MARKET_INTERVAL,
+    nextUpdateAt: now + MARKET_INTERVAL,
   },
   { merge: true }
 );

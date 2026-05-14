@@ -35,7 +35,7 @@ import {
 const START_COIN = 100000;
 const START_PRICE = 10000;
 const MARKET_INTERVAL = 5 * 60 * 1000;
-const GAME_OPEN_AT = new Date("2026-05-15T11:00:00+09:00").getTime();
+const GAME_OPEN_AT = new Date("2026-05-14T00:00:00+09:00").getTime();
 
 const crewMembers = [
   { name: "뿌꾸", image: "/streamers/뿌꾸.png" },

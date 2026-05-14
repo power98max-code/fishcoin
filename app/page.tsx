@@ -169,7 +169,7 @@ const [newStockImageFile, setNewStockImageFile] = useState<File | null>(null);
   const portfolioStocks = stocks.filter(
     (stock) => (holdings[stock.name] || 0) > 0
   );
-  const visibleStocks = [...stocks]
+ const visibleStocks = [...stocks]
   .filter((stock) => stock.active !== false)
   .filter((stock) => stock.name.includes(searchText.trim()))
   .sort((a, b) => {
@@ -1518,6 +1518,7 @@ useEffect(() => {
 
     <section className="grid gap-3">
       {visibleStocks.map((stock) => {
+        if (stock.active === false) return null;
   const amount = holdings[stock.name] || 0;
   const isUp = stock.changeRate >= 0;
   const isDelistingWarning =

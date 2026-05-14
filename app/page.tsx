@@ -655,6 +655,7 @@ export default function Home() {
 
   useEffect(() => {
     if (!user || !isLoaded) return;
+    if (!isGameOpen) return;
 
     setDoc(
       doc(db, "users", user.uid),

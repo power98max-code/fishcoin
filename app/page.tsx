@@ -762,6 +762,7 @@ useEffect(() => {
 
   useEffect(() => {
     const updatePrices = () => {
+      if (!isGameOpen) return;
       setStocks((prev) =>
         prev.map((stock) => {
            if (!isMarketOpen) return stock;

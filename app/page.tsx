@@ -115,7 +115,7 @@ export default function Home() {
 
 const isMarketOpen =
   currentHour >= 9 && currentHour < 21;
-  const GAME_OPEN_AT = new Date("2026-05-14T11:00:00+09:00").getTime();
+  const GAME_OPEN_AT = new Date("2026-05-14T12:00:00+09:00").getTime();
 
 const isGameOpen = Date.now() >= GAME_OPEN_AT;
 const isAdmin =

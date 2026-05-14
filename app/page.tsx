@@ -590,32 +590,33 @@ export default function Home() {
           };
         });
 
-        transaction.set(
-          marketRef,
-          {
-            stocks: nextStocks,
-            lastUpdatedAt: nowTime,
-            nextUpdateAt: nowTime + MARKET_INTERVAL,
-          },
-          { merge: true }
-        );
+        await setDoc(
+  marketRef,
+  {
+    stocks: nextStocks,
+    lastUpdatedAt: now,
+    nextUpdateAt: now + MARKET_INTERVAL,
+  },
+  { merge: true }
+);
       });
     }, 1000);
 
     return () => clearInterval(timer);
   }, [isGameOpen, isMarketOpen]);
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      const remaining = Math.max(
-        0,
-        Math.ceil((nextMarketUpdateAt - Date.now()) / 1000)
-      );
-      setCountdown(remaining);
-    }, 1000);
+ useEffect(() => {
+  const timer = setInterval(() => {
+    const remain = Math.max(
+      0,
+      Math.floor((nextMarketUpdateAt - Date.now()) / 1000)
+    );
 
-    return () => clearInterval(timer);
-  }, [nextMarketUpdateAt]);
+    setCountdown(remain);
+  }, 1000);
+
+  return () => clearInterval(timer);
+}, [nextMarketUpdateAt]);
 
   useEffect(() => {
     if (selectedStock) document.body.style.overflow = "hidden";

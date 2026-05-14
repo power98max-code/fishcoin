@@ -502,7 +502,7 @@ const getTradeAmount = (stockName: string) => {
 };
 const buyStock = (stock: Stock) => {
   if (!isGameOpen) {
-  alert("어인섬 Fish Coin 거래소는 5월 14일 오전 11시에 오픈합니다.");
+  alert("어인섬 Fish Coin 거래소는 5월 14일 오후 12시에 오픈합니다.");
   return;
 }
   if (!isMarketOpen) {
@@ -535,7 +535,7 @@ const buyStock = (stock: Stock) => {
 
 const sellStock = (stock: Stock) => {
   if (!isGameOpen) {
-  alert("어인섬 Fish Coin 거래소는 5월 14일 오전 11시에 오픈합니다.");
+  alert("어인섬 Fish Coin 거래소는 5월 14일 오후 12시에 오픈합니다.");
   return;
 }
   if (!isMarketOpen) {
@@ -917,6 +917,13 @@ useEffect(() => {
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-black via-zinc-950 to-black text-white p-6">
+      {!isGameOpen && (
+  <div className="mb-6 bg-red-500/20 border border-red-500 text-red-200 rounded-2xl px-5 py-4 text-center font-bold">
+    어인섬 Fish Coin 거래소는
+    <br />
+    5월 14일 오후 12시에 오픈합니다.
+  </div>
+)}
       {showAuth && !user && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-6 z-50">
           <div className="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-3xl p-8 relative">

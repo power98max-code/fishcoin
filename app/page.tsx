@@ -827,7 +827,7 @@ export default function Home() {
             <p className="text-emerald-400 font-bold mb-2">FISH COIN EXCHANGE</p>
             <h1 className="text-4xl font-black mb-3">🐟 어인섬 Fish Coin 거래소</h1>
             <div className={`mb-3 inline-block px-3 py-1 rounded-xl text-sm font-bold ${isMarketOpen ? "bg-emerald-500/20 text-emerald-300" : "bg-red-500/20 text-red-300"}`}>
-              {isMarketOpen ? "🟢 장 운영중 09:00~21:00" : "🔴 장 마감 09:00 재개"}
+              {isMarketOpen ? "🟢 장 운영중 11:00~19:00" : "🔴 장 마감 11:00 재개"}
             </div>
             <p className="text-zinc-400 text-lg">
               {user ? `${nickname}님 환영합니다. 데이터는 자동 저장됩니다.` : "로그인하지 않아도 시장은 볼 수 있습니다."}

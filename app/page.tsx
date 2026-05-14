@@ -621,57 +621,49 @@ const saveMarketStocks = async (nextStocks: Stock[]) => {
     { merge: true }
   );
 };
+
 const toggleStockActive = async (stockName: string) => {
+  if (!isAdmin) return;
+
+  const nextStocks = stocks.map((stock) =>
+    stock.name === stockName
+      ? { ...stock, active: stock.active === false ? true : false }
+      : stock
+  );
+
+  setStocks(nextStocks);
+  await saveMarketStocks(nextStocks);
+
+  alert("숨김 상태가 저장되었습니다.");
+};
+
+const resetStockPrice = async (stockName: string) => {
   if (!isAdmin) return;
 
   const nextStocks = stocks.map((stock) =>
     stock.name === stockName
       ? {
           ...stock,
-          active: stock.active === false ? true : false,
+          price: START_PRICE,
+          changeRate: 0,
+          suspendedUntil: undefined,
+          active: true,
+          history: [
+            {
+              time: "관리자 초기화",
+              price: START_PRICE,
+              changeRate: 0,
+              timestamp: Date.now(),
+            },
+          ],
         }
       : stock
   );
 
-  // 화면 즉시 반영
   setStocks(nextStocks);
+  await saveMarketStocks(nextStocks);
 
-  // Firestore 공용 market 저장
-  await setDoc(
-    doc(db, "market", "main"),
-    {
-      stocks: nextStocks,
-      updatedAt: Date.now(),
-    },
-    { merge: true }
-  );
-
-  alert("숨김 상태 저장 완료");
-};
-
-const resetStockPrice = (stockName: string) => {
-  if (!isAdmin) return;
-
-  setStocks((prev) =>
-    prev.map((stock) =>
-      stock.name === stockName
-        ? {
-            ...stock,
-            price: START_PRICE,
-            changeRate: 0,
-            suspendedUntil: undefined,
-            history: [
-              {
-                time: "관리자 초기화",
-                price: START_PRICE,
-                changeRate: 0,
-                timestamp: Date.now(),
-              },
-            ],
-          }
-        : stock
-    )
-  );
+  alert("가격이 초기화되었습니다.");
 };
 
 const uploadStockImage = async (file: File, stockName: string) => {
@@ -681,7 +673,6 @@ const uploadStockImage = async (file: File, stockName: string) => {
   );
 
   await uploadBytes(imageRef, file);
-
   return await getDownloadURL(imageRef);
 };
 
@@ -724,7 +715,11 @@ const addNewStock = async () => {
     ],
   };
 
-  setStocks((prev) => [...prev, newStock]);
+  const nextStocks = [...stocks, newStock];
+
+  setStocks(nextStocks);
+  await saveMarketStocks(nextStocks);
+
   setNewStockName("");
   setNewStockImageFile(null);
 
@@ -737,13 +732,12 @@ const changeStockImage = async (stockName: string, file: File | null) => {
 
   const imageUrl = await uploadStockImage(file, stockName);
 
-  setStocks((prev) =>
-    prev.map((stock) =>
-      stock.name === stockName
-        ? { ...stock, image: imageUrl }
-        : stock
-    )
+  const nextStocks = stocks.map((stock) =>
+    stock.name === stockName ? { ...stock, image: imageUrl } : stock
   );
+
+  setStocks(nextStocks);
+  await saveMarketStocks(nextStocks);
 
   alert("이미지가 변경되었습니다.");
 };

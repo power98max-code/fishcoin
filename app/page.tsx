@@ -145,6 +145,7 @@ const isAdmin =
   const [searchText, setSearchText] = useState("");
 const [sortType, setSortType] = useState<SortType>("price");
 const [countdown, setCountdown] = useState(300);
+const [lastMarketUpdateAt, setLastMarketUpdateAt] = useState(Date.now());
 const [tradeAmounts, setTradeAmounts] = useState<Record<string, string>>({});
 
 
@@ -461,6 +462,7 @@ useEffect(() => {
         setStocks(
           data.stocks ?? makeDefaultStocks()
         );
+        setLastMarketUpdateAt(data.updatedAt ?? Date.now());
       }
     }
   );
@@ -632,15 +634,17 @@ const recoverFromBankruptcy = () => {
     "파산 신청이 완료되었습니다.\n100,000 FC로 다시 시작합니다."
   );
 };
+const now = Date.now();
 const saveMarketStocks = async (nextStocks: Stock[]) => {
   await setDoc(
     doc(db, "market", "main"),
     {
       stocks: nextStocks,
-      updatedAt: Date.now(),
+      updatedAt: now,
     },
     { merge: true }
   );
+  setLastMarketUpdateAt(now);
 };
 
 const toggleStockActive = async (stockName: string) => {
@@ -778,17 +782,14 @@ const changeStockImage = async (stockName: string, file: File | null) => {
 };
   useEffect(() => {
   const timer = setInterval(() => {
-    setCountdown((prev) => {
-      if (prev <= 1) {
-        return 300;
-      }
+    const elapsed = Math.floor((Date.now() - lastMarketUpdateAt) / 1000);
+    const remaining = 300 - (elapsed % 300);
 
-      return prev - 1;
-    });
+    setCountdown(remaining);
   }, 1000);
 
   return () => clearInterval(timer);
-}, []);
+}, [lastMarketUpdateAt]);
 
 useEffect(() => {
   if (selectedStock) {

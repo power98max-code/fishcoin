@@ -153,6 +153,10 @@ const [tradeAmounts, setTradeAmounts] = useState<Record<string, string>>({});
   }, 0);
 
   const totalAsset = myCoin + totalStockValue;
+  const myRank =
+  user
+    ? rankings.findIndex((rankUser) => rankUser.uid === user.uid) + 1
+    : 0;
   const canUseBankruptcy =
   !lastBankruptcyAt ||
   Date.now() - lastBankruptcyAt >=
@@ -1417,13 +1421,6 @@ useEffect(() => {
           </div>
 
           <div className="bg-zinc-900/80 border border-zinc-800 rounded-3xl p-4">
-            <p className="text-zinc-400 text-sm mb-2">주식 평가액</p>
-            <p className="text-2xl font-black">
-              {user ? totalStockValue.toLocaleString() : "-"} FC
-            </p>
-          </div>
-
-          <div className="bg-zinc-900/80 border border-zinc-800 rounded-3xl p-4">
             <p className="text-zinc-400 text-sm mb-2">총 자산</p>
             <p className="text-2xl font-black">
               {user ? totalAsset.toLocaleString() : "-"} FC
@@ -1432,6 +1429,11 @@ useEffect(() => {
 
           <div className="bg-zinc-900/80 border border-zinc-800 rounded-3xl p-4">
             <p className="text-zinc-400 text-sm mb-2">수익률</p>
+
+            <p className="text-zinc-400">내 랭킹</p>
+<p className="text-3xl font-black">
+  {myRank > 0 ? `${myRank}위` : "-"}
+</p>
             <p
               className={`text-2xl font-black ${
                 profitRate >= 0 ? "text-red-400" : "text-blue-400"

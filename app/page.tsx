@@ -1743,6 +1743,42 @@ const isDelisted = stock.price <= 500;
           ×
         </button>
       </div>
+      <div className="mb-5 bg-black/30 border border-zinc-800 rounded-2xl p-4">
+  <p className="text-lg font-black mb-3">
+    새 종목 추가
+  </p>
+
+  <div className="grid gap-3">
+
+    <input
+      value={newStockName}
+      onChange={(e) =>
+        setNewStockName(e.target.value)
+      }
+      placeholder="종목명"
+      className="bg-black border border-zinc-700 rounded-xl px-3 py-2"
+    />
+
+    <input
+      type="file"
+      accept="image/*"
+      onChange={(e) =>
+        setNewStockImageFile(
+          e.target.files?.[0] ?? null
+        )
+      }
+      className="bg-black border border-zinc-700 rounded-xl px-3 py-2"
+    />
+
+    <button
+      onClick={addNewStock}
+      className="bg-emerald-500 hover:bg-emerald-600 px-4 py-2 rounded-xl font-bold"
+    >
+      종목 추가
+    </button>
+
+  </div>
+</div>
 
       <div className="grid gap-3">
         {stocks.map((stock) => (

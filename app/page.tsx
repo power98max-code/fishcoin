@@ -625,14 +625,38 @@ const saveMarketStocks = async (nextStocks: Stock[]) => {
 const toggleStockActive = async (stockName: string) => {
   if (!isAdmin) return;
 
-  const nextStocks = stocks.map((stock) =>
-    stock.name === stockName
-      ? { ...stock, active: stock.active === false ? true : false }
-      : stock
+  const marketRef = doc(db, "market", "main");
+  const marketSnap = await getDoc(marketRef);
+
+  if (!marketSnap.exists()) {
+    alert("마켓 데이터가 없습니다.");
+    return;
+  }
+
+  const data = marketSnap.data();
+  const currentStocks: Stock[] = data.stocks ?? [];
+
+  const nextStocks = currentStocks.map((stock) => {
+    if (stock.name !== stockName) return stock;
+
+    const isCurrentlyActive = stock.active !== false;
+
+    return {
+      ...stock,
+      active: !isCurrentlyActive,
+    };
+  });
+
+  await setDoc(
+    marketRef,
+    {
+      stocks: nextStocks,
+      updatedAt: Date.now(),
+    },
+    { merge: true }
   );
 
   setStocks(nextStocks);
-  await saveMarketStocks(nextStocks);
 
   alert("숨김 상태가 저장되었습니다.");
 };

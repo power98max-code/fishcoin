@@ -32,7 +32,7 @@ import {
   CartesianGrid,
 } from "recharts";
 
-const START_COIN = 100000;
+const START_COIN = 1000000;
 const START_PRICE = 10000;
 const MARKET_INTERVAL = 5 * 60 * 1000;
 const GAME_OPEN_AT = new Date("2026-05-15T11:00:00+09:00").getTime();
@@ -473,7 +473,7 @@ export default function Home() {
     }
 
     const ok = confirm(
-      "파산 신청을 하겠습니까?\n\n보유 주식은 전부 초기화되고\n100,000 FC로 다시 시작합니다.\n\n다음 신청은 24시간 후 가능합니다."
+      "파산 신청을 하겠습니까?\n\n보유 주식은 전부 초기화되고\n1,000,000 FC로 다시 시작합니다.\n\n다음 신청은 24시간 후 가능합니다."
     );
 
     if (!ok) return;
@@ -481,7 +481,7 @@ export default function Home() {
     setMyCoin(START_COIN);
     setHoldings({});
     setLastBankruptcyAt(Date.now());
-    alert("파산 신청이 완료되었습니다.\n100,000 FC로 다시 시작합니다.");
+    alert("파산 신청이 완료되었습니다.\n1,000,000 FC로 다시 시작합니다.");
   };
 
   useEffect(() => {
@@ -849,7 +849,7 @@ export default function Home() {
         {!isMarketOpen && (
           <div className="mb-6 bg-red-500/10 border border-red-500/30 rounded-2xl p-4 text-center">
             <p className="text-red-300 font-black text-lg">🔴 현재 장 마감 상태입니다.</p>
-            <p className="text-zinc-400 text-sm mt-1">오전 09:00에 거래가 재개됩니다.</p>
+            <p className="text-zinc-400 text-sm mt-1">오전 11:00에 거래가 재개됩니다.</p>
           </div>
         )}
 

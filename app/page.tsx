@@ -442,23 +442,21 @@ const getXAxisTicks = (stock: Stock) => {
     setStocks(defaultStocks);
   }
 };
- useEffect(() => {
+useEffect(() => {
   const marketRef = doc(db, "market", "main");
 
-  const unsubscribe = onSnapshot(marketRef, async (snapshot) => {
-    if (snapshot.exists()) {
-      const data = snapshot.data();
-    } else {
-      const defaultStocks = makeDefaultStocks();
+  const unsubscribe = onSnapshot(
+    marketRef,
+    async (snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.data();
 
-      await setDoc(marketRef, {
-        stocks: defaultStocks,
-        updatedAt: Date.now(),
-      });
-
-      setStocks(defaultStocks);
+        setStocks(
+          data.stocks ?? makeDefaultStocks()
+        );
+      }
     }
-  });
+  );
 
   return () => unsubscribe();
 }, []);
@@ -635,8 +633,10 @@ const toggleStockActive = async (stockName: string) => {
       : stock
   );
 
+  // 화면 즉시 반영
   setStocks(nextStocks);
 
+  // Firestore 공용 market 저장
   await setDoc(
     doc(db, "market", "main"),
     {
@@ -646,7 +646,7 @@ const toggleStockActive = async (stockName: string) => {
     { merge: true }
   );
 
-  alert("시장 상태가 저장되었습니다.");
+  alert("숨김 상태 저장 완료");
 };
 
 const resetStockPrice = (stockName: string) => {

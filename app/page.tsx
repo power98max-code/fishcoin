@@ -1732,7 +1732,7 @@ const isDelisted = stock.price <= 500;
       </div>
       {showAdmin && isAdmin && (
   <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-6 z-50">
-    <div className="w-full max-w-2xl bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
+    <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
       <div className="flex items-center justify-between mb-5">
         <h2 className="text-2xl font-black">관리자 모드</h2>
 

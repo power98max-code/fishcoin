@@ -419,6 +419,47 @@ const getXAxisTicks = (stock: Stock) => {
       orderBy("totalAsset", "desc"),
       limit(10)
     );
+    const loadMarketStocks = async () => {
+  const marketRef = doc(db, "market", "main");
+
+  const marketSnap = await getDoc(marketRef);
+
+  if (marketSnap.exists()) {
+    const data = marketSnap.data();
+
+    setStocks(data.stocks ?? makeDefaultStocks());
+
+  } else {
+
+    const defaultStocks = makeDefaultStocks();
+
+    await setDoc(marketRef, {
+      stocks: defaultStocks,
+      updatedAt: Date.now(),
+    });
+
+    setStocks(defaultStocks);
+  }
+};
+ useEffect(() => {
+    loadMarketStocks();
+  }, []);
+  useEffect(() => {
+  if (stocks.length === 0) return;
+
+  const saveMarket = async () => {
+    await setDoc(
+      doc(db, "market", "main"),
+      {
+        stocks,
+        updatedAt: Date.now(),
+      },
+      { merge: true }
+    );
+  };
+
+  saveMarket();
+}, [stocks]);
 
     const snap = await getDocs(q);
 
@@ -693,6 +734,7 @@ const changeStockImage = async (stockName: string, file: File | null) => {
 
   return () => clearInterval(timer);
 }, []);
+
 useEffect(() => {
   if (selectedStock) {
     document.body.style.overflow = "hidden";
@@ -722,7 +764,6 @@ useEffect(() => {
         setNickname(data.nickname || "익명");
         setMyCoin(data.myCoin ?? START_COIN);
         setHoldings(data.holdings ?? {});
-        setStocks(data.stocks ?? makeDefaultStocks());
         setLastBankruptcyAt(
   data.lastBankruptcyAt ?? null
 );
@@ -744,7 +785,6 @@ useEffect(() => {
           nickname,
           myCoin,
           holdings,
-          stocks,
           totalAsset,
           lastBankruptcyAt,
           updatedAt: new Date().toISOString(),

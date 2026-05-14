@@ -462,6 +462,20 @@ useEffect(() => {
 
   return () => unsubscribe();
 }, []);
+useEffect(() => {
+  const hiddenRef = doc(db, "market", "hidden");
+
+  const unsubscribe = onSnapshot(hiddenRef, (snapshot) => {
+    if (snapshot.exists()) {
+      const data = snapshot.data();
+      setHiddenStockNames(data.names ?? []);
+    } else {
+      setHiddenStockNames([]);
+    }
+  });
+
+  return () => unsubscribe();
+}, []);
 
     const snap = await getDocs(q);
 
@@ -627,26 +641,27 @@ const saveMarketStocks = async (nextStocks: Stock[]) => {
 const toggleStockActive = async (stockName: string) => {
   if (!isAdmin) return;
 
-  const marketRef = doc(db, "market", "main");
-  const marketSnap = await getDoc(marketRef);
+  const hiddenRef = doc(db, "market", "hidden");
+  const hiddenSnap = await getDoc(hiddenRef);
 
-  const data = marketSnap.exists() ? marketSnap.data() : {};
-  const currentHidden: string[] = data.hiddenStockNames ?? [];
+  const currentNames: string[] = hiddenSnap.exists()
+    ? hiddenSnap.data().names ?? []
+    : [];
 
-  const nextHidden = currentHidden.includes(stockName)
-    ? currentHidden.filter((name) => name !== stockName)
-    : [...currentHidden, stockName];
+  const nextNames = currentNames.includes(stockName)
+    ? currentNames.filter((name) => name !== stockName)
+    : [...currentNames, stockName];
 
   await setDoc(
-    marketRef,
+    hiddenRef,
     {
-      hiddenStockNames: nextHidden,
+      names: nextNames,
       updatedAt: Date.now(),
     },
     { merge: true }
   );
 
-  setHiddenStockNames(nextHidden);
+  setHiddenStockNames(nextNames);
 
   alert("숨김 상태가 저장되었습니다.");
 };

@@ -374,7 +374,7 @@ export default function Home() {
       return;
     }
     if (!isMarketOpen) {
-      alert("현재 장 마감 상태입니다.");
+      alert("현재 장 마감 시간입니다. 거래 가능 시간은 11:00 ~ 19:00입니다.");
       return;
     }
     if (!user) {
@@ -409,7 +409,7 @@ export default function Home() {
       return;
     }
     if (!isMarketOpen) {
-      alert("현재 장 마감 상태입니다.");
+      alert("현재 장 마감 시간입니다. 거래 가능 시간은 11:00 ~ 19:00입니다.");
       return;
     }
     if (!user) {

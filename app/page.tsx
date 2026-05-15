@@ -370,7 +370,7 @@ export default function Home() {
 
   const buyStock = (stock: Stock) => {
     if (!isGameOpen) {
-      alert("어인섬 Fish Coin 거래소는 5월 15 오전 11시에 오픈합니다.");
+      alert("어인섬 Fish Coin 거래소는 5월 15일 오전 11시에 오픈합니다.");
       return;
     }
     if (!isMarketOpen) {
@@ -507,103 +507,65 @@ export default function Home() {
     return () => unsubscribe();
   }, []);
 
-  useEffect(() => {
-    const timer = setInterval(async () => {
-      if (!isGameOpen || !isMarketOpen) return;
+useEffect(() => {
+  const timer = setInterval(async () => {
+    const now = Date.now();
 
-      const marketRef = doc(db, "market", "main");
+    if (!isGameOpen) return;
+    if (!isMarketOpen) return;
 
-      await runTransaction(db, async (transaction) => {
-        const marketSnap = await transaction.get(marketRef);
-        if (!marketSnap.exists()) return;
+    const marketRef = doc(db, "market", "main");
+    const marketSnap = await getDoc(marketRef);
 
-        const data = marketSnap.data();
-        const nowTime = Date.now();
-        const nextUpdateAt = data.nextUpdateAt ?? GAME_OPEN_AT;
+    if (!marketSnap.exists()) return;
 
-        if (nowTime < nextUpdateAt) return;
+    const data = marketSnap.data();
+    const nextUpdateAt = data.nextUpdateAt ?? 0;
 
-        const currentStocks: Stock[] = data.stocks ?? [];
+    if (now < nextUpdateAt) return;
 
-        const nextStocks = currentStocks.map((stock) => {
-          if (stock.suspendedUntil && nowTime < stock.suspendedUntil) return stock;
+    const currentStocks: Stock[] = data.stocks ?? [];
 
-          if (stock.suspendedUntil && nowTime >= stock.suspendedUntil) {
-            return {
-              ...stock,
-              price: START_PRICE,
-              changeRate: 0,
-              suspendedUntil: undefined,
-              history: [
-                {
-                  time: "재상장",
-                  price: START_PRICE,
-                  changeRate: 0,
-                  timestamp: nowTime,
-                },
-              ],
-            };
-          }
+    const nextStocks = currentStocks.map((stock) => {
+      const randomRate = Number((Math.random() * 16 - 8).toFixed(2));
 
-          let randomRate = Number((Math.random() * 16 - 8).toFixed(2));
-          const eventChance = Math.random();
+      const newPrice = Math.max(
+        100,
+        Math.round(stock.price * (1 + randomRate / 100))
+      );
 
-          if (eventChance < 0.05) randomRate = Number((Math.random() * 30).toFixed(2));
-          if (eventChance > 0.95) randomRate = Number((-(Math.random() * 30)).toFixed(2));
-
-          const newPrice = Math.max(
-            1,
-            Math.floor(stock.price * (1 + randomRate / 100))
-          );
-
-          if (newPrice <= 1000) {
-            return {
-              ...stock,
-              price: 1000,
-              changeRate: randomRate,
-              suspendedUntil: nowTime + 24 * 60 * 60 * 1000,
-              history: [
-                ...stock.history,
-                {
-                  time: formatMarketTime(nowTime),
-                  price: 1000,
-                  changeRate: randomRate,
-                  timestamp: nowTime,
-                },
-              ].slice(-864),
-            };
-          }
-
-          return {
-            ...stock,
+      return {
+        ...stock,
+        price: newPrice,
+        changeRate: randomRate,
+        history: [
+          ...(stock.history ?? []).slice(-863),
+          {
+            time: new Date(now).toLocaleTimeString("ko-KR", {
+              hour: "2-digit",
+              minute: "2-digit",
+            }),
             price: newPrice,
             changeRate: randomRate,
-            history: [
-              ...stock.history,
-              {
-                time: formatMarketTime(nowTime),
-                price: newPrice,
-                changeRate: randomRate,
-                timestamp: nowTime,
-              },
-            ].slice(-864),
-          };
-        });
+            timestamp: now,
+          },
+        ],
+      };
+    });
 
-        await setDoc(
-  marketRef,
-  {
-    stocks: nextStocks,
-    lastUpdatedAt: now,
-    nextUpdateAt: now + MARKET_INTERVAL,
-  },
-  { merge: true }
-);
-      });
-    }, 1000);
+    await setDoc(
+      marketRef,
+      {
+        stocks: nextStocks,
+        lastUpdatedAt: now,
+        nextUpdateAt: now + MARKET_INTERVAL,
+      },
+      { merge: true }
+    );
+  }, 1000);
 
-    return () => clearInterval(timer);
-  }, [isGameOpen, isMarketOpen]);
+  return () => clearInterval(timer);
+}, [isGameOpen, isMarketOpen]);
 
  useEffect(() => {
   const timer = setInterval(() => {

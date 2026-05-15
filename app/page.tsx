@@ -37,6 +37,7 @@ const START_COIN = 1000000;
 const START_PRICE = 10000;
 const MARKET_INTERVAL = 5 * 60 * 1000;
 const GAME_OPEN_AT = new Date("2026-05-15T11:00:00+09:00").getTime();
+const MAINTENANCE_MODE = true;
 
 const crewMembers = [
   { name: "뿌꾸", image: "/streamers/뿌꾸.png" },
@@ -370,6 +371,10 @@ export default function Home() {
   };
 
   const buyStock = (stock: Stock) => {
+    if (MAINTENANCE_MODE) {
+  alert("현재 거래소 수정 작업 중입니다. 잠시 후 다시 이용해주세요.");
+  return;
+}
     if (!isGameOpen) {
       alert("어인섬 Fish Coin 거래소는 5월 15일 오전 11시에 오픈합니다.");
       return;
@@ -405,6 +410,10 @@ export default function Home() {
   };
 
   const sellStock = (stock: Stock) => {
+    if (MAINTENANCE_MODE) {
+  alert("현재 거래소 수정 작업 중입니다. 잠시 후 다시 이용해주세요.");
+  return;
+}
     if (!isGameOpen) {
       alert("어인섬 Fish Coin 거래소는 5월 15일 오전 11시에 오픈합니다.");
       return;
@@ -510,6 +519,7 @@ export default function Home() {
 
 useEffect(() => {
   const timer = setInterval(async () => {
+    if (MAINTENANCE_MODE) return;
     const now = Date.now();
 
     if (!isGameOpen) return;
@@ -647,6 +657,21 @@ useEffect(() => {
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-black via-zinc-950 to-black text-white p-6">
+      {MAINTENANCE_MODE && (
+      <div className="mb-6 bg-yellow-500/10 border border-yellow-500/40 text-yellow-200 rounded-2xl px-5 py-5 text-center font-bold">
+        <p className="text-xl mb-2">
+          ⚠ 어인섬 Fish Coin 거래소 수정 작업 중
+        </p>
+
+        <p className="text-sm text-zinc-300 leading-6">
+          현재 가격 변동 및 거래 안정화를 위한 수정 작업이 진행 중입니다.
+          <br />
+          작업 완료 전까지 매수 / 매도 및 가격 변동이 일시 중단됩니다.
+          <br />
+          이용에 불편을 드려 죄송합니다.
+        </p>
+      </div>
+    )}
       {!isGameOpen && (
         <div className="mb-6 bg-red-500/20 border border-red-500 text-red-200 rounded-2xl px-5 py-4 text-center font-bold">
           어인섬 Fish Coin 거래소는

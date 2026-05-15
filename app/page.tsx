@@ -654,6 +654,17 @@ useEffect(() => {
           5월 15일 오전 11시에 오픈합니다.
         </div>
       )}
+      <div className="mb-6 bg-yellow-500/10 border border-yellow-500/30 rounded-2xl p-4 text-center">
+  <p className="text-yellow-300 font-black text-lg">
+    ⚠ 거래소 안정화 업데이트 적용 완료
+  </p>
+
+  <p className="text-zinc-300 text-sm mt-2">
+    현재 접속 중이신 분들은 가격 변동 오류 방지를 위해
+    <br />
+    새로고침(Ctrl + F5 또는 모바일 새로고침)을 한 번 부탁드립니다 🙏
+  </p>
+</div>
 
       {showAuth && !user && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-6 z-50">

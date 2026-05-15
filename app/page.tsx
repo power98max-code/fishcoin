@@ -679,18 +679,7 @@ useEffect(() => {
           5월 15일 오전 11시에 오픈합니다.
         </div>
       )}
-      <div className="mb-6 bg-yellow-500/10 border border-yellow-500/30 rounded-2xl p-4 text-center">
-  <p className="text-yellow-300 font-black text-lg">
-    ⚠ 거래소 안정화 업데이트 적용 완료
-  </p>
-
-  <p className="text-zinc-300 text-sm mt-2">
-    현재 접속 중이신 분들은 가격 변동 오류 방지를 위해
-    <br />
-    새로고침(Ctrl + F5 또는 모바일 새로고침)을 한 번 부탁드립니다 🙏
-  </p>
-</div>
-
+     
       {showAuth && !user && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-6 z-50">
           <div className="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-3xl p-8 relative">
@@ -873,9 +862,20 @@ useEffect(() => {
 
         <div className="flex justify-end mb-4">
           <div className="bg-zinc-900 border border-zinc-800 rounded-2xl px-4 py-2 text-sm text-zinc-300">
-            {!isGameOpen ? "5월 15일 오전 11시 오픈 예정" : isMarketOpen ? (
-              <>다음 변동까지 <span className="font-black text-white">{minutes}:{seconds}</span></>
-            ) : "현재 장 마감"}
+           {MAINTENANCE_MODE ? (
+  "🔧 거래소 수정 작업 중"
+) : !isGameOpen ? (
+  "5월 15일 오전 11시 오픈 예정"
+) : isMarketOpen ? (
+  <>
+    다음 변동까지{" "}
+    <span className="font-black text-white">
+      {minutes}:{seconds}
+    </span>
+  </>
+) : (
+  "현재 장 마감"
+)}
           </div>
         </div>
 

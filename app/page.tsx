@@ -636,7 +636,7 @@ useEffect(() => {
 useEffect(() => {
   loadRankings();
 
-  const timer = setInterval(loadRankings, 60000);
+  const timer = setInterval(loadRankings, 300000);
 
   return () => clearInterval(timer);
 }, []);

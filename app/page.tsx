@@ -633,11 +633,13 @@ useEffect(() => {
     );
   }, [user, isLoaded, nickname, myCoin, holdings, totalAsset, lastBankruptcyAt]);
 
-  useEffect(() => {
-    loadRankings();
-    const timer = setInterval(loadRankings, 10000);
-    return () => clearInterval(timer);
-  }, [totalAsset]);
+useEffect(() => {
+  loadRankings();
+
+  const timer = setInterval(loadRankings, 60000);
+
+  return () => clearInterval(timer);
+}, []);
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-black via-zinc-950 to-black text-white p-6">

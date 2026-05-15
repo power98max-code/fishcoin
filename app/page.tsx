@@ -20,6 +20,7 @@ import {
   limit,
   where,
   runTransaction,
+
 } from "firebase/firestore";
 import { auth, db } from "../lib/firebase";
 import {
@@ -515,53 +516,56 @@ useEffect(() => {
     if (!isMarketOpen) return;
 
     const marketRef = doc(db, "market", "main");
-    const marketSnap = await getDoc(marketRef);
 
-    if (!marketSnap.exists()) return;
+    await runTransaction(db, async (transaction) => {
+      const marketSnap = await transaction.get(marketRef);
 
-    const data = marketSnap.data();
-    const nextUpdateAt = data.nextUpdateAt ?? 0;
+      if (!marketSnap.exists()) return;
 
-    if (now < nextUpdateAt) return;
+      const data = marketSnap.data();
+      const nextUpdateAt = data.nextUpdateAt ?? 0;
 
-    const currentStocks: Stock[] = data.stocks ?? [];
+      if (now < nextUpdateAt) return;
 
-    const nextStocks = currentStocks.map((stock) => {
-      const randomRate = Number((Math.random() * 16 - 8).toFixed(2));
+      const currentStocks: Stock[] = data.stocks ?? [];
 
-      const newPrice = Math.max(
-        100,
-        Math.round(stock.price * (1 + randomRate / 100))
+      const nextStocks = currentStocks.map((stock) => {
+        const randomRate = Number((Math.random() * 16 - 8).toFixed(2));
+
+        const newPrice = Math.max(
+          100,
+          Math.round(stock.price * (1 + randomRate / 100))
+        );
+
+        return {
+          ...stock,
+          price: newPrice,
+          changeRate: randomRate,
+          history: [
+            ...(stock.history ?? []).slice(-863),
+            {
+              time: new Date(now).toLocaleTimeString("ko-KR", {
+                hour: "2-digit",
+                minute: "2-digit",
+              }),
+              price: newPrice,
+              changeRate: randomRate,
+              timestamp: now,
+            },
+          ],
+        };
+      });
+
+      transaction.set(
+        marketRef,
+        {
+          stocks: nextStocks,
+          lastUpdatedAt: now,
+          nextUpdateAt: now + MARKET_INTERVAL,
+        },
+        { merge: true }
       );
-
-      return {
-        ...stock,
-        price: newPrice,
-        changeRate: randomRate,
-        history: [
-          ...(stock.history ?? []).slice(-863),
-          {
-            time: new Date(now).toLocaleTimeString("ko-KR", {
-              hour: "2-digit",
-              minute: "2-digit",
-            }),
-            price: newPrice,
-            changeRate: randomRate,
-            timestamp: now,
-          },
-        ],
-      };
     });
-
-    await setDoc(
-      marketRef,
-      {
-        stocks: nextStocks,
-        lastUpdatedAt: now,
-        nextUpdateAt: now + MARKET_INTERVAL,
-      },
-      { merge: true }
-    );
   }, 1000);
 
   return () => clearInterval(timer);

@@ -36,7 +36,7 @@ const START_COIN = 1000000;
 const START_PRICE = 10000;
 const MARKET_INTERVAL = 10 * 60 * 1000;
 const GAME_OPEN_AT = new Date("2026-05-15T11:00:00+09:00").getTime();
-const MAINTENANCE_MODE = true;
+const MAINTENANCE_MODE = false;
 
 const crewMembers = [
   { name: "뿌꾸", image: "/streamers/뿌꾸.png" },

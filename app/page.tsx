@@ -271,7 +271,7 @@ export default function Home() {
   };
 
   const loadRankings = async () => {
-    const q = query(collection(db, "users"), orderBy("totalAsset", "desc"), limit(100));
+    const q = query(collection(db, "users"), orderBy("totalAsset", "desc"), limit(1000));
     const snap = await getDocs(q);
 
     const rankingData = snap.docs.map((docSnap) => {
@@ -570,7 +570,7 @@ export default function Home() {
 useEffect(() => {
   loadRankings();
 
-  const timer = setInterval(loadRankings, 300000);
+  const timer = setInterval(loadRankings, 600000);
 
   return () => clearInterval(timer);
 }, []);

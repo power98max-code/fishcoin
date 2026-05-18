@@ -19,7 +19,6 @@ import {
   orderBy,
   limit,
   where,
-  runTransaction,
 
 } from "firebase/firestore";
 import { auth, db } from "../lib/firebase";
@@ -35,7 +34,7 @@ import {
 
 const START_COIN = 1000000;
 const START_PRICE = 10000;
-const MARKET_INTERVAL = 5 * 60 * 1000;
+const MARKET_INTERVAL = 10 * 60 * 1000;
 const GAME_OPEN_AT = new Date("2026-05-15T11:00:00+09:00").getTime();
 const MAINTENANCE_MODE = true;
 
@@ -138,7 +137,6 @@ export default function Home() {
   const [selectedStock, setSelectedStock] = useState<Stock | null>(null);
   const [searchText, setSearchText] = useState("");
   const [sortType, setSortType] = useState<SortType>("price");
-  const [countdown, setCountdown] = useState(300);
   const [nextMarketUpdateAt, setNextMarketUpdateAt] = useState(
     Date.now() + MARKET_INTERVAL
   );
@@ -162,8 +160,6 @@ export default function Home() {
   const canUseBankruptcy =
     !lastBankruptcyAt || Date.now() - lastBankruptcyAt >= 24 * 60 * 60 * 1000;
 
-  const minutes = String(Math.floor(countdown / 60)).padStart(2, "0");
-  const seconds = String(countdown % 60).padStart(2, "0");
 
   const topRise = [...stocks].sort((a, b) => b.changeRate - a.changeRate)[0];
   const topFall = [...stocks].sort((a, b) => a.changeRate - b.changeRate)[0];
@@ -517,82 +513,6 @@ export default function Home() {
     return () => unsubscribe();
   }, []);
 
-useEffect(() => {
-  const timer = setInterval(async () => {
-    if (MAINTENANCE_MODE) return;
-    const now = Date.now();
-
-    if (!isGameOpen) return;
-    if (!isMarketOpen) return;
-
-    const marketRef = doc(db, "market", "main");
-
-    await runTransaction(db, async (transaction) => {
-      const marketSnap = await transaction.get(marketRef);
-
-      if (!marketSnap.exists()) return;
-
-      const data = marketSnap.data();
-      const nextUpdateAt = data.nextUpdateAt ?? 0;
-
-      if (now < nextUpdateAt) return;
-
-      const currentStocks: Stock[] = data.stocks ?? [];
-
-      const nextStocks = currentStocks.map((stock) => {
-        const randomRate = Number((Math.random() * 16 - 8).toFixed(2));
-
-        const newPrice = Math.max(
-          100,
-          Math.round(stock.price * (1 + randomRate / 100))
-        );
-
-        return {
-          ...stock,
-          price: newPrice,
-          changeRate: randomRate,
-          history: [
-            ...(stock.history ?? []).slice(-863),
-            {
-              time: new Date(now).toLocaleTimeString("ko-KR", {
-                hour: "2-digit",
-                minute: "2-digit",
-              }),
-              price: newPrice,
-              changeRate: randomRate,
-              timestamp: now,
-            },
-          ],
-        };
-      });
-
-      transaction.set(
-        marketRef,
-        {
-          stocks: nextStocks,
-          lastUpdatedAt: now,
-          nextUpdateAt: now + MARKET_INTERVAL,
-        },
-        { merge: true }
-      );
-    });
-  }, 1000);
-
-  return () => clearInterval(timer);
-}, [isGameOpen, isMarketOpen]);
-
- useEffect(() => {
-  const timer = setInterval(() => {
-    const remain = Math.max(
-      0,
-      Math.floor((nextMarketUpdateAt - Date.now()) / 1000)
-    );
-
-    setCountdown(remain);
-  }, 1000);
-
-  return () => clearInterval(timer);
-}, [nextMarketUpdateAt]);
 
   useEffect(() => {
     if (selectedStock) document.body.style.overflow = "hidden";
@@ -867,11 +787,8 @@ useEffect(() => {
 ) : !isGameOpen ? (
   "5월 15일 오전 11시 오픈 예정"
 ) : isMarketOpen ? (
-  <>
-    다음 변동까지{" "}
-    <span className="font-black text-white">
-      {minutes}:{seconds}
-    </span>
+ <>
+    {formatMarketTime(nextMarketUpdateAt - MARKET_INTERVAL)} 갱신
   </>
 ) : (
   "현재 장 마감"

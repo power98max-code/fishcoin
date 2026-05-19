@@ -12,6 +12,7 @@ type Stock = {
   name: string;
   image: string;
   price: number;
+  dayOpenPrice?: number;
   changeRate: number;
   suspendedUntil?: number;
   history?: {

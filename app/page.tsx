@@ -56,6 +56,7 @@ type Stock = {
   name: string;
   image: string;
   price: number;
+  dayOpenPrice?: number;
   suspendedUntil?: number;
   changeRate: number;
   history: {
@@ -75,6 +76,10 @@ type RankingUser = {
   uid: string;
   nickname: string;
   totalAsset: number;
+};
+type Holding = {
+  quantity: number;
+  avgPrice: number;
 };
 
 const makeEmail = (id: string) => `${id}@fishcoin.local`;
@@ -131,7 +136,7 @@ export default function Home() {
   const [signupNickname, setSignupNickname] = useState("");
   const [myCoin, setMyCoin] = useState(START_COIN);
   const [lastBankruptcyAt, setLastBankruptcyAt] = useState<number | null>(null);
-  const [holdings, setHoldings] = useState<Record<string, number>>({});
+  const [holdings, setHoldings] = useState<Record<string, Holding>>({});
   const [stocks, setStocks] = useState<Stock[]>([]);
   const [rankings, setRankings] = useState<RankingUser[]>([]);
   const [selectedStock, setSelectedStock] = useState<Stock | null>(null);
@@ -148,9 +153,9 @@ export default function Home() {
   const isMarketOpen = currentHour >= 11 && currentHour < 19;
 
   const totalStockValue = stocks.reduce((sum, stock) => {
-    return sum + (holdings[stock.name] || 0) * stock.price;
-  }, 0);
-
+  const holding = holdings[stock.name];
+  return sum + (holding?.quantity || 0) * stock.price;
+}, 0);
   const totalAsset = myCoin + totalStockValue;
   const profitRate = ((totalAsset - START_COIN) / START_COIN) * 100;
   const myRank = user
@@ -165,8 +170,8 @@ export default function Home() {
   const topFall = [...stocks].sort((a, b) => a.changeRate - b.changeRate)[0];
 
   const portfolioStocks = stocks.filter(
-    (stock) => (holdings[stock.name] || 0) > 0
-  );
+  (stock) => (holdings[stock.name]?.quantity || 0) > 0
+);
 
   const visibleStocks = [...stocks]
     .filter((stock) => stock.name.includes(searchText.trim()))
@@ -399,10 +404,25 @@ export default function Home() {
     }
 
     setMyCoin((prev) => prev - totalPrice);
-    setHoldings((prev) => ({
-      ...prev,
-      [stock.name]: (prev[stock.name] || 0) + amount,
-    }));
+    setHoldings((prev) => {
+  const prevHolding = prev[stock.name];
+
+  const prevQuantity = prevHolding?.quantity || 0;
+  const prevAvgPrice = prevHolding?.avgPrice || stock.price;
+
+  const nextQuantity = prevQuantity + amount;
+
+  const nextAvgPrice =
+    (prevQuantity * prevAvgPrice + amount * stock.price) / nextQuantity;
+
+  return {
+    ...prev,
+    [stock.name]: {
+      quantity: nextQuantity,
+      avgPrice: Math.round(nextAvgPrice),
+    },
+  };
+});
   };
 
   const sellStock = (stock: Stock) => {
@@ -431,17 +451,31 @@ export default function Home() {
     const amount = getTradeAmount(stock.name);
     if (amount <= 0) return;
 
-    const currentAmount = holdings[stock.name] || 0;
+    const currentHolding = holdings[stock.name];
+const currentAmount = currentHolding?.quantity || 0;
     if (currentAmount < amount) {
       alert("보유 수량이 부족합니다!");
       return;
     }
 
     setMyCoin((prev) => prev + stock.price * amount);
-    setHoldings((prev) => ({
-      ...prev,
-      [stock.name]: currentAmount - amount,
-    }));
+    setHoldings((prev) => {
+  const nextAmount = currentAmount - amount;
+
+  if (nextAmount <= 0) {
+    const next = { ...prev };
+    delete next[stock.name];
+    return next;
+  }
+
+  return {
+    ...prev,
+    [stock.name]: {
+      quantity: nextAmount,
+      avgPrice: currentHolding?.avgPrice || stock.price,
+    },
+  };
+});
   };
 
   const setMaxBuy = (stock: Stock) => {
@@ -462,7 +496,7 @@ export default function Home() {
       return;
     }
 
-    const maxAmount = holdings[stock.name] || 0;
+    const maxAmount = holdings[stock.name]?.quantity || 0;
     setTradeAmounts((prev) => ({ ...prev, [stock.name]: String(maxAmount) }));
   };
 
@@ -508,6 +542,7 @@ export default function Home() {
       const data = snapshot.data();
       setStocks(data.stocks ?? []);
       setNextMarketUpdateAt(data.nextUpdateAt ?? Date.now() + MARKET_INTERVAL);
+      loadRankings();
     });
 
     return () => unsubscribe();
@@ -539,7 +574,26 @@ export default function Home() {
         const data = snap.data();
         setNickname(data.nickname || "익명");
         setMyCoin(data.myCoin ?? START_COIN);
-        setHoldings(data.holdings ?? {});
+        const rawHoldings = data.holdings ?? {};
+const convertedHoldings: Record<string, Holding> = {};
+
+Object.entries(rawHoldings).forEach(([stockName, value]) => {
+  if (typeof value === "number") {
+    convertedHoldings[stockName] = {
+      quantity: value,
+      avgPrice: START_PRICE,
+    };
+  } else if (
+    value &&
+    typeof value === "object" &&
+    "quantity" in value &&
+    "avgPrice" in value
+  ) {
+    convertedHoldings[stockName] = value as Holding;
+  }
+});
+
+setHoldings(convertedHoldings);
         setLastBankruptcyAt(data.lastBankruptcyAt ?? null);
       }
 
@@ -567,13 +621,7 @@ export default function Home() {
     );
   }, [user, isLoaded, nickname, myCoin, holdings, totalAsset, lastBankruptcyAt]);
 
-useEffect(() => {
-  loadRankings();
 
-  const timer = setInterval(loadRankings, 600000);
-
-  return () => clearInterval(timer);
-}, []);
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-black via-zinc-950 to-black text-white p-6">
@@ -658,7 +706,7 @@ useEffect(() => {
                     <p className={`text-2xl font-black ${currentSelectedStock.changeRate >= 0 ? "text-red-400" : "text-blue-400"}`}>
                       {currentSelectedStock.changeRate >= 0 ? "▲" : "▼"} {Math.abs(currentSelectedStock.changeRate)}%
                     </p>
-                    <p className="text-zinc-400 text-xl">내 보유량: {holdings[currentSelectedStock.name] || 0}주</p>
+                    <p className="text-zinc-400 text-xl">내 보유량: {holdings[currentSelectedStock.name]?.quantity || 0}주</p>
                     <p className="text-zinc-400 text-xl">보유 FC: {myCoin.toLocaleString()} FC</p>
                   </div>
                 </div>
@@ -676,7 +724,7 @@ useEffect(() => {
                   <div className="grid gap-2 text-sm text-zinc-400 mb-4">
                     <div className="flex justify-between"><span>현재가</span><span className="text-white font-bold">{currentSelectedStock.price.toLocaleString()} FC</span></div>
                     <div className="flex justify-between"><span>보유 FC</span><span className="text-white font-bold">{myCoin.toLocaleString()} FC</span></div>
-                    <div className="flex justify-between"><span>보유 수량</span><span className="text-white font-bold">{holdings[currentSelectedStock.name] || 0}주</span></div>
+                    <div className="flex justify-between"><span>보유 수량</span><span className="text-white font-bold">{holdings[currentSelectedStock.name]?.quantity || 0}주</span></div>
                     <div className="flex justify-between border-t border-zinc-800 pt-3"><span>주문 금액</span><span className="text-white font-bold">{(currentSelectedStock.price * Number(tradeAmounts[currentSelectedStock.name] || 1)).toLocaleString()} FC</span></div>
                   </div>
                   <div className="grid grid-cols-2 gap-2">
@@ -775,8 +823,8 @@ useEffect(() => {
 
         {topRise && topFall && (
           <section className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-            <div className="bg-red-500/10 border border-red-500/30 rounded-3xl p-4"><p className="text-zinc-400 text-sm mb-1">🔥 오늘 급등</p><p className="text-2xl font-black">{topRise.name} <span className="text-red-400">▲ {Math.abs(topRise.changeRate)}%</span></p></div>
-            <div className="bg-blue-500/10 border border-blue-500/30 rounded-3xl p-4"><p className="text-zinc-400 text-sm mb-1">📉 오늘 급락</p><p className="text-2xl font-black">{topFall.name} <span className="text-blue-400">▼ {Math.abs(topFall.changeRate)}%</span></p></div>
+            <div className="bg-red-500/10 border border-red-500/30 rounded-3xl p-4"><p className="text-zinc-400 text-sm mb-1">🔥 현재 급등</p><p className="text-2xl font-black">{topRise.name} <span className="text-red-400">▲ {Math.abs(topRise.changeRate)}%</span></p></div>
+            <div className="bg-blue-500/10 border border-blue-500/30 rounded-3xl p-4"><p className="text-zinc-400 text-sm mb-1">📉 현재 급락</p><p className="text-2xl font-black">{topFall.name} <span className="text-blue-400">▼ {Math.abs(topFall.changeRate)}%</span></p></div>
           </section>
         )}
 
@@ -815,7 +863,7 @@ useEffect(() => {
 
             <section className="grid gap-3">
               {visibleStocks.map((stock) => {
-                const amount = holdings[stock.name] || 0;
+                const amount = holdings[stock.name]?.quantity || 0;
                 const isUp = stock.changeRate >= 0;
 
                 return (
@@ -864,27 +912,78 @@ useEffect(() => {
         )}
 
         {activeTab === "portfolio" && (
-          <section className="grid gap-4">
-            {!user ? (
-              <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-10 text-center"><p className="text-2xl font-black mb-2">로그인이 필요합니다</p><p className="text-zinc-400 mb-5">포트폴리오는 로그인 후 확인할 수 있습니다.</p></div>
-            ) : portfolioStocks.length === 0 ? (
-              <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-10 text-center"><p className="text-2xl font-black mb-2">보유 종목이 없습니다</p><p className="text-zinc-400">시장 탭에서 원하는 종목을 매수해보세요.</p></div>
-            ) : (
-              portfolioStocks.map((stock) => (
-                <div
-  key={stock.name}
-  onClick={() => setSelectedStock(stock)}
-  className="bg-zinc-900 border border-zinc-800 rounded-3xl p-6 cursor-pointer hover:scale-[1.01] transition"
->
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4"><img src={stock.image} alt={stock.name} className="w-16 h-16 rounded-full object-cover" /><div><h2 className="text-2xl font-black">{stock.name}</h2><p className="text-zinc-400">{holdings[stock.name]}주 보유중</p></div></div>
-                    <div className="text-right"><p className="text-2xl font-black">{(holdings[stock.name] * stock.price).toLocaleString()} FC</p></div>
-                  </div>
+  <section className="grid gap-4">
+    {!user ? (
+      <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-10 text-center">
+        <p className="text-2xl font-black mb-2">로그인이 필요합니다</p>
+        <p className="text-zinc-400 mb-5">
+          포트폴리오는 로그인 후 확인할 수 있습니다.
+        </p>
+      </div>
+    ) : portfolioStocks.length === 0 ? (
+      <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-10 text-center">
+        <p className="text-2xl font-black mb-2">보유 종목이 없습니다</p>
+        <p className="text-zinc-400">
+          시장 탭에서 원하는 종목을 매수해보세요.
+        </p>
+      </div>
+    ) : (
+      portfolioStocks.map((stock) => {
+        const holding = holdings[stock.name];
+
+        const quantity = holding?.quantity || 0;
+        const avgPrice = holding?.avgPrice || stock.price;
+        const evalAmount = quantity * stock.price;
+        const profit = (stock.price - avgPrice) * quantity;
+        const profitRate =
+          avgPrice > 0 ? ((stock.price - avgPrice) / avgPrice) * 100 : 0;
+
+        return (
+          <div
+            key={stock.name}
+            onClick={() => setSelectedStock(stock)}
+            className="bg-zinc-900 border border-zinc-800 rounded-3xl p-6 cursor-pointer hover:scale-[1.01] transition"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <img
+                  src={stock.image}
+                  alt={stock.name}
+                  className="w-16 h-16 rounded-full object-cover"
+                />
+
+                <div>
+                  <h2 className="text-2xl font-black">{stock.name}</h2>
+
+                  <p className="text-zinc-400">{quantity}주 보유중</p>
+
+                  <p className="text-zinc-500 text-sm">
+                    평단가: {avgPrice.toLocaleString()} FC
+                  </p>
+
+                  <p
+                    className={`text-sm font-bold ${
+                      profit >= 0 ? "text-red-400" : "text-blue-400"
+                    }`}
+                  >
+                    평가손익: {profit >= 0 ? "+" : ""}
+                    {profit.toLocaleString()} FC ({profitRate.toFixed(2)}%)
+                  </p>
                 </div>
-              ))
-            )}
-          </section>
-        )}
+              </div>
+
+              <div className="text-right">
+                <p className="text-2xl font-black">
+                  {evalAmount.toLocaleString()} FC
+                </p>
+              </div>
+            </div>
+          </div>
+        );
+      })
+    )}
+  </section>
+)}
 
         {activeTab === "ranking" && (
           <section className="bg-zinc-900/80 border border-zinc-800 rounded-3xl p-4">

@@ -47,7 +47,7 @@ const getKoreanTimeText = (timestamp: number) => {
 
 export const updateMarketPrices = onSchedule(
   {
-    schedule: "every 10 minutes",
+    schedule: "*/10 * * * *",
     timeZone: "Asia/Seoul",
   },
   async () => {

@@ -617,7 +617,7 @@ setHoldings(convertedHoldings);
         lastBankruptcyAt,
         updatedAt: new Date().toISOString(),
       },
-      { merge: true }
+
     );
   }, [user, isLoaded, nickname, myCoin, holdings, totalAsset, lastBankruptcyAt]);
 

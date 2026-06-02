@@ -784,30 +784,49 @@ setHoldings(convertedHoldings);
       )}
 
       <div className="max-w-6xl mx-auto">
-        <header className="mb-8 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
-          <div className="mb-6 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-4 text-center">
-  <p className="text-emerald-300 font-black text-lg">
-    📢 라거머핀 재상장 관련 안내
-  </p>
 
-  <p className="text-zinc-300 text-sm mt-2 leading-6">
-    라거머핀 종목 재상장 과정 중 보유 주식이 정상적으로 삭제되지 않는 오류가 발견되었습니다.
-    <br />
-    현재 해당 오류는 수정 완료되었으며 동일한 문제가 다시 발생하지 않도록 조치하였습니다.
-    <br />
-    이용에 불편을 드린 점에 대한 보상으로 모든 이용자분들께 500,000 FC 지급이 완료되었습니다.
-  </p>
-</div>
-          <div>
-            <p className="text-emerald-400 font-bold mb-2">FISH COIN EXCHANGE</p>
-            <h1 className="text-4xl font-black mb-3">🐟 어인섬 Fish Coin 거래소</h1>
-            <div className={`mb-3 inline-block px-3 py-1 rounded-xl text-sm font-bold ${isMarketOpen ? "bg-emerald-500/20 text-emerald-300" : "bg-red-500/20 text-red-300"}`}>
-              {isMarketOpen ? "🟢 장 운영중 11:00~19:00" : "🔴 장 마감 11:00 재개"}
-            </div>
-            <p className="text-zinc-400 text-lg">
-              {user ? `${nickname}님 환영합니다. 데이터는 자동 저장됩니다.` : "로그인하지 않아도 시장은 볼 수 있습니다."}
-            </p>
-          </div>
+  <div className="mb-6 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-4 text-center">
+    <p className="text-emerald-300 font-black text-lg">
+      📢 라거머핀 재상장 관련 안내
+    </p>
+
+    <p className="text-zinc-300 text-sm mt-2 leading-6">
+      라거머핀 종목 재상장 과정 중 보유 주식이 정상적으로 삭제되지 않는 오류가 발견되었습니다.
+      <br />
+      현재 해당 오류는 수정 완료되었으며 동일한 문제가 다시 발생하지 않도록 조치하였습니다.
+      <br />
+      이용에 불편을 드린 점에 대한 보상으로 모든 이용자분들께 500,000 FC 지급이 완료되었습니다.
+    </p>
+  </div>
+
+  <header className="mb-8 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+    <div>
+      <p className="text-emerald-400 font-bold mb-2">
+        FISH COIN EXCHANGE
+      </p>
+
+      <h1 className="text-4xl font-black mb-3">
+        🐟 어인섬 Fish Coin 거래소
+      </h1>
+
+      <div
+        className={`mb-3 inline-block px-3 py-1 rounded-xl text-sm font-bold ${
+          isMarketOpen
+            ? "bg-emerald-500/20 text-emerald-300"
+            : "bg-red-500/20 text-red-300"
+        }`}
+      >
+        {isMarketOpen
+          ? "🟢 장 운영중 11:00~19:00"
+          : "🔴 장 마감 11:00 재개"}
+      </div>
+
+      <p className="text-zinc-400 text-lg">
+        {user
+          ? `${nickname}님 환영합니다. 데이터는 자동 저장됩니다.`
+          : "로그인하지 않아도 시장은 볼 수 있습니다."}
+      </p>
+    </div>
 
           {user ? (
             <div className="flex items-center gap-2">

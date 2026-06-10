@@ -785,17 +785,6 @@ setHoldings(convertedHoldings);
 
       <div className="max-w-6xl mx-auto">
 
-  <div className="mb-6 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-4 text-center">
-  <p className="text-emerald-300 font-black text-lg">
-    📢 라거머핀 재상장 관련 안내
-  </p>
-
-  <p className="text-zinc-300 text-sm mt-2">
-    재상장 과정 중 보유 주식이 삭제되지 않는 오류가 확인되었습니다.
-    <br />
-    현재 수정이 완료되었으며, 보상으로 모든 이용자에게 500,000 FC가 지급되었습니다.
-  </p>
-</div>
 
   <header className="mb-8 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
     <div>
